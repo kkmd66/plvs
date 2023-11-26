@@ -9,6 +9,7 @@ sudo apt-get update
 sudo apt-get install -y build-essential cmake   
 sudo apt-get install -y libeigen3-dev 
 sudo apt-get install -y libopenni-dev libopenni2-dev libpcl-dev
+sudo apt-get install -y curl software-properties-common
 
 #sudo apt-get install -y libzstd-devel 
 
@@ -23,6 +24,7 @@ sudo apt-get install -y libsuitesparse-dev
 # voxblox and volumetric mapping 
 sudo apt-get install -y libgoogle-glog-dev
 sudo apt-get install -y libprotobuf-dev protobuf-compiler
+sudo apt-get install -y libpcl-conversions-dev liboctomap-dev
 
 # python for rgbd-tum dataset tools and evo package
 sudo apt-get install -y python3-pip python3-scipy python3-sklearn-pandas
@@ -44,10 +46,10 @@ sudo apt-get install -y librealsense2-dev librealsense2-dbg
 
 # ros 
 # see https://catkin-tools.readthedocs.io/en/latest/installing.html
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" \
-        > /etc/apt/sources.list.d/ros-latest.list'
-wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
-sudo apt-get install -y python3-catkin-tools
-#sudo pip3 install -U catkin_tools
+# sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" \
+#         > /etc/apt/sources.list.d/ros-latest.list'
+# wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+# sudo apt-get install -y python3-catkin-tools
+sudo pip3 install -U catkin_tools
 
 echo "...All deps installed!"

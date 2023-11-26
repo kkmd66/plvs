@@ -3895,7 +3895,7 @@ bool Tracking::TrackLocalMap()
 }
 
 #define USE_LINES_FOR_NEW_KEYFRAMES_GEN 1
-#define USE_FOV_CENTER_CRIERION 1
+#define USE_FOV_CENTER_CRITERION 1
 
 bool Tracking::NeedNewKeyFrame()
 {
@@ -4072,7 +4072,7 @@ bool Tracking::NeedNewKeyFrame()
 
     // Condition cFovCs: Current FOV center is distant more than "skMaxDistFovCenters" from last keyframe FOV center and we have a decent number of inliers 
     bool cFovCs = false;
-#if USE_FOV_CENTER_CRIERION    
+#if USE_FOV_CENTER_CRITERION    
     if(mbUseFovCentersKfGenCriterion)
     {
         const Eigen::Vector3f currentFovCenter = mCurrentFrame.GetFovCenter();
@@ -4175,7 +4175,7 @@ void Tracking::CreateNewKeyFrame()
         mpImuPreintegratedFromLastKF = new IMU::Preintegrated(pKF->GetImuBias(),pKF->mImuCalib);
     }
 
-    if(mSensor!=System::MONOCULAR && mSensor != System::IMU_MONOCULAR) // TODO check if incluide imu_stereo
+    if(mSensor!=System::MONOCULAR && mSensor != System::IMU_MONOCULAR) // TODO check if include imu_stereo
     {
         mCurrentFrame.UpdatePoseMatrices();
         // cout << "create new MPs" << endl;
@@ -5143,6 +5143,15 @@ void Tracking::ResetActiveMap(bool bLocMap)
     mpLastKeyFrame = static_cast<KeyFramePtr>(NULL);
     mvIniMatches.clear();
 
+#if 1
+    // Luigi: added to avoid segmentation fault on map Stereo-Intertial map reloading when map resets are called. 
+    // Without these clear() calls we get a segmentation fault in UpdateFrameIMU(): some of the KFs get lost in the resets above.  
+    mlRelativeFramePoses.clear();
+    mlpReferences.clear();
+    mlFrameTimes.clear();
+    mlbLost.clear();
+#endif 
+
     mbVelocity = false;
 
     if(mpViewer)
@@ -5258,8 +5267,10 @@ void Tracking::InformOnlyTracking(const bool &flag)
 
 void Tracking::UpdateFrameIMU(const float s, const IMU::Bias &b, KeyFramePtr pCurrentKeyFrame)
 {
+    if(!pCurrentKeyFrame) return; 
+
     Map * pMap = pCurrentKeyFrame->GetMap();
-    PLVS_ASSERT((bool)pMap,"Current map must be non-null!");
+    MSG_ASSERT((bool)pMap,"Current map must be non-null!");
     
     std::cout << "Tracking::UpdateFrameIMU() - update on map " << pMap->GetId() << std::endl;     
     //std::cout << "Tracking::UpdateFrameIMU() - start loop" << std::endl; 
@@ -5270,8 +5281,8 @@ void Tracking::UpdateFrameIMU(const float s, const IMU::Bias &b, KeyFramePtr pCu
     //std::cout << "mlbLost.size(): " << mlbLost.size() << std::endl; 
     //std::cout << "mlRelativeFramePoses.size(): " << mlRelativeFramePoses.size() << std::endl;
     //std::cout << "mlpReferences.size(): " << mlpReferences.size() << std::endl;
-    PLVS_ASSERT(mlbLost.size() == mlRelativeFramePoses.size(),"Must be of the same size!");
-    PLVS_ASSERT(mlbLost.size() == mlpReferences.size(),"Must be of the same size!");
+    MSG_ASSERT(mlbLost.size() == mlRelativeFramePoses.size(),"Must be of the same size!");
+    MSG_ASSERT(mlbLost.size() == mlpReferences.size(),"Must be of the same size!");
     for(auto lit=mlRelativeFramePoses.begin(),lend=mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lbL++)
     {
         if(*lbL)
@@ -5286,6 +5297,11 @@ void Tracking::UpdateFrameIMU(const float s, const IMU::Bias &b, KeyFramePtr pCu
 
         while(pKF && pKF->isBad())
         {
+            if(pKF == pKF->GetParent())
+            {
+                std::cout << "WARNING: Tracking::UpdateFrameIMU() - loop with parent" << std::endl;
+                break;  
+            }                
             pKF = pKF->GetParent();
             if(!pKF) 
             {

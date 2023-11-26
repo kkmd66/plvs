@@ -1809,7 +1809,7 @@ void Frame::ComputeStereoLineMatches()
     if( Nlines > 0 && mvKeyLinesRight.size()>0 ) 
     {
         nLineMatches = lineMatcher.SearchStereoMatchesByKnn(*this, vMatches, vValidMatches, thDescriptorDist);
-        PLVS_ASSERT(vMatches.size()==vValidMatches.size(),"The two sizes must be equal");
+        MSG_ASSERT(vMatches.size()==vValidMatches.size(),"The two sizes must be equal");
     }
     else
     {
@@ -2580,7 +2580,7 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
         mvLineLevelSigma2    = mpLineExtractorLeft->GetScaleSigmaSquares();
         mvLineInvLevelSigma2 = mpLineExtractorLeft->GetInverseScaleSigmaSquares();
     }   
-    
+
     // ORB extraction
 #ifdef REGISTER_TIMES
     std::chrono::steady_clock::time_point time_StartExtORB = std::chrono::steady_clock::now();
